@@ -39,6 +39,9 @@
       border: 1px solid #ccc;
       box-sizing: border-box;
     }
+    input[type="email"]{
+      display: none;
+    }
     #preview {
       margin-top: 30px;
       padding: 20px;
@@ -88,7 +91,6 @@
         <label>Cargo</label>
         <input type="text" id="cargo" placeholder="Seu Cargo">
 
-        <label>Email</label>
         <input type="email" id="email" placeholder="seu@email.com"> 
     </div>
 
@@ -175,10 +177,58 @@
       document.getElementById('codigoHTML').value = document.getElementById('preview').innerHTML;
     }
 
+    function validarCamposObrigatorios() {
+      const nome = document.getElementById('nome').value.trim();
+      const cargo = document.getElementById('cargo').value.trim();
+      const email = document.getElementById('email').value.trim();
+      
+      const camposVazios = [];
+      
+      if (!nome) camposVazios.push('Nome');
+      if (!cargo) camposVazios.push('Cargo');
+      
+      
+      return camposVazios;
+    }
+
+    function mostrarNotificacao(mensagem, tipo = 'sucesso') {
+      const cores = {
+        sucesso: '#2ecc40',
+        erro: '#ff4136',
+        aviso: '#ff851b'
+      };
+      
+      Toastify({
+        text: mensagem,
+        duration: 4000,
+        gravity: "top",
+        position: "center",
+        backgroundColor: cores[tipo],
+        style: {
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+        }
+      }).showToast();
+    }
+
     async function copiarAssinatura() {
+      // Verificar se os campos obrigatórios estão preenchidos
+      const camposVazios = validarCamposObrigatorios();
+      
+      if (camposVazios.length > 0) {
+        const mensagem = camposVazios.length === 1 
+          ? `Por favor, preencha o campo: ${camposVazios[0]}`
+          : `Por favor, preencha os campos: ${camposVazios.join(', ')}`;
+        
+        mostrarNotificacao(mensagem, 'aviso');
+        return;
+      }
+
       const preview = document.getElementById("preview");
       if (!preview.innerHTML.trim()) {
-        Toastify({ text: "Gere a assinatura primeiro.", duration: 3000, gravity: "top", position: "center", backgroundColor: "#ff4136" }).showToast();
+        mostrarNotificacao("Gere a assinatura primeiro clicando no botão 'Gerar Assinatura'.", 'erro');
         return;
       }
 
@@ -195,10 +245,10 @@
           'text/plain': textBlob
         });
         await navigator.clipboard.write([clipboardItem]);
-        Toastify({ text: "Assinatura copiada para a área de transferência.", duration: 3000, gravity: "top", position: "center", backgroundColor: "#2ecc40" }).showToast();
+        mostrarNotificacao(" Assinatura copiada com sucesso!", 'sucesso');
       } catch (err) {
         console.error('Falha ao copiar: ', err);
-        Toastify({ text: "Falha ao copiar a assinatura.", duration: 3000, gravity: "top", position: "center", backgroundColor: "#ff4136" }).showToast();
+        mostrarNotificacao("❌ Erro ao copiar a assinatura. Tente novamente.", 'erro');
       }
     }
 
